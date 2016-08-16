@@ -1,0 +1,18 @@
+<Files ~ "^\.(htaccess|htpasswd)$">
+deny from all
+</Files>
+
+<Files ~ "\.txt$">
+order deny,allow
+deny from all
+allow from localhost
+allow from 192.168.33.77
+</Files>
+
+Options -Indexes
+AuthUserFile /var/www/html/word_cnt_get/app/.htpasswd
+AuthGroupFile /dev/null
+AuthName "Please enter your ID and password"
+AuthType Basic
+require valid-user 
+DirectoryIndex index.html

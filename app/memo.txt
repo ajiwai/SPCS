@@ -1,0 +1,16 @@
+# 月別集計処理実行
+cd /var/www/html/SPCS/app
+/usr/bin/php /var/www/html/SPCS/app/index.php 2 201602 201603
+
+# 月別集計処理実行（メモリ節約型）
+cd /var/www/html/SPCS/app
+/usr/bin/php /var/www/html/SPCS/app/index.php 3 201603 201603
+
+# SQL
+select DATE,count(*) FROM T_COUNT group by DATE;
+
+# SQL
+select DATE,count(*) FROM T_COUNT group by DATE;
+select * from T_MONTHLY_COUNT;
+select YYYYMM,count(*) from T_MONTHLY_COUNT group by YYYYMM order by YYYYMM;
+

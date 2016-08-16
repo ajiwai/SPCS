@@ -1,0 +1,146 @@
+<?php
+
+require APP_ROOT_DIR . '/helper/ViewHelper.php';
+
+//プルダウンリスト用HTML生成
+$helper = new ViewHelper();
+$selectSiteHtml = "<select name='search_sel_site' id ='search_sel_site'>\n<option id='0'></option>\n";
+$selectSiteHtml .= ViewHelper::getSelectHtml('ID', 'SITE_NM', $mSiteList, $searchSelSiteId);
+$selectWordHtml = "<select name='search_sel_word' id ='search_sel_word'>\n<option id='0'></option>\n";
+$selectWordHtml .= ViewHelper::getSelectHtml('ID', 'WORD', $mWordList, $searchSelWordId);
+$selectCateHtml = "<select name='search_sel_cate' id ='search_sel_cate'>\n<option id='0'></option>\n";
+$selectCateHtml .= ViewHelper::getSelectHtml('ID', 'CATEGORY_NM', $mCateList, $searchSelCateId);
+
+//結果TABLE用HTML生成（HEAD部)
+$tableThHtml = '';
+$trStyle = 'background-color:skyblue;text-align:center;';
+$thStyle = 'background-color:lightgreen;';
+$thDateWidth = 50;
+$thDateStyle = 'word-break:break-all;';
+
+if ($chkDisplay == 'checked') {
+    $tableThHtml .= "<tr style='".$trStyle."'><th style='".$thStyle."'>Category</th><th style='".$thStyle."'>Tags</th>";
+    $tableThHtml .= "<th style='".$thStyle."'>Word</th><th style='".$thStyle."'>Site</th>";
+} else {
+    $tableThHtml .= "<tr style='".$trStyle."'><th style='".$thStyle."'>Word</th><th style='".$thStyle."'>Site</th>";
+}
+for ($i = 0; $i < count($monthList); $i++){
+    if ($chkDisplay3 == 'checked') {
+        $tableThHtml .= "<th width=".$thDateWidth." style='".$thDateStyle."'>".$monthList[$i]['YYYYMM']."<br><span style='font-size:6pt'>(日数)<br>(MIN)<br>(MAX)</th>";
+    }else{
+        $tableThHtml .= "<th width=".$thDateWidth." style='".$thDateStyle."'>".$monthList[$i]['YYYYMM'].'</th>';
+    }
+}
+$tableThHtml .= '</tr>';
+$tableThHtml2 = str_replace('th', 'td', $tableThHtml);
+$countTable = array();
+$wkFirstDate = '';
+$wkAvgCount = 0;
+
+//結果TABLE用HTML生成（BODY部)
+for ($i = 0; $i < count($tCountList); $i++){
+    $countData = $tCountList[$i];
+    $siteId = $countData['SITE_ID'];
+    $siteNm = $countData['SITE_NM'];
+    $date = $countData['YYYYMM'];
+    //$date = strftime('%Y/%m/%d', strtotime($date . '-0 day'));
+    $wkFirstDate = ($wkFirstDate == '') ? $date : $wkFirstDate;
+    $word = $countData['WORD'];
+    $dispCount = $countData['DISP_COUNT'];
+    $avgCount = $countData['AVG_COUNT'];
+    $countTable[$date][$word][$siteId] = $count;
+    $cateNm = $countData['CATEGORY_NM'];
+    $tags = $countData['TAGS'];
+    $siteType = $countData['SITE_TYPE'];
+    $countDays = $countData['COUNT_DAYS'];
+    $minCount = $countData['MIN_COUNT'];
+    $maxCount = $countData['MAX_COUNT'];
+//echo $date.'/'.$word.'/'.$countData['CATEGORY_NM'].'/'.$countData['TAGS'].'/'.$countData['AVG_COUNT'].'/'.$countData['SITE_TYPE'].'<br>';
+    if( $siteId != $wkSiteId || $word != $wkWord){
+        if ($chkDisplay2 == 'checked') {
+            if ($searchSelSiteId == '' && $word != $wkWord && $htmlTable != '') {
+                $htmlTable .= $tableThHtml2;
+            }else if ($searchSelSiteId != '' && $cateNm != $wkCateNm && $htmlTable != '') {
+                $htmlTable .= $tableThHtml2;
+            }
+        }
+        if ( $htmlTable == '' ) {
+            $htmlTable .= '<tr>';
+        }else{
+            $htmlTable .= '</tr><tr>';
+        }
+        $tdStyle = '';
+        if ($chkDisplay == 'checked') {
+            $htmlTable .= "<td style='".$tdStyle."'>".$cateNm.'</td>';
+            $htmlTable .= "<td style='".$tdStyle."'>".$tags.'</td>';
+        }
+        $htmlTable .= "<td style='".$tdStyle."'>".$word.'</td>';
+        $htmlTable .= "<td style='".$tdStyle."'>".$siteNm.'</td>';
+        $value = substr($value, 0, 4) . '/' . substr($value, 4, 2) . '/' . substr($value, 6, 2);
+
+        $wkWord = $word;
+        $wkCateNm = $cateNm;
+        $wkSiteId = $siteId;
+    }
+
+    //サイトタイプが2(求人)の場合、前日より増えている場合は青字にする。減っている場合は赤字にする。
+    $tdStyle = 'color:black;text-align:right;';
+    if($siteType == 2 && $date != $wkFirstDate){
+        $yesterday = strftime('%Y/%m/%d', strtotime($date . '-1 day'));
+        if($wkAvgCount < $avgCount){
+            $tdStyle = 'color:blue;text-align:right;';
+        }else if($wkAvgCount > $avgCount){
+            $tdStyle = 'color:red;text-align:right;';
+        }
+    }
+
+    //件数が0の場合はオレンジにする。エラー(-1）の場合は紫字斜体にする。
+    if ( $avgCount == 0 ) {
+        $tdStyle = 'color:orange;text-align:right;';
+    } elseif ( $avgCount == -1 ) {
+        $tdStyle = 'color:purple;font-style: italic;text-align:right;';
+    }
+    if ($chkDisplay3 == 'checked') {
+        $htmlTable .= "<td style='" . $tdStyle . "'>".$dispCount."<br><span style='font-size:6pt'>(".$countDays.')<br>('.$minCount.')<br>('.$maxCount.')</span></td>';
+    }else{
+        $htmlTable .= "<td style='" . $tdStyle . "'>".$dispCount.'</td>';
+    }
+    $wkAvgCount = $avgCount;
+}
+if(count($tCountList) == 0 ){
+    $htmlTable = '<p>該当データなし</p>';
+}else{
+    $htmlTable .= '</tr></table>';
+    $htmlTable = "<table border='1' style='border-collapse: collapse;table-layout: fixed;'>" . $tableThHtml . $htmlTable;
+}
+
+?>
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>word mounthly count list</title>
+</head>
+<body>
+<form action="./?p=CountList&f=<?php echo $functionId ?>" method="post">
+<a href="?p=CountList&f=1">日別件数リスト</a>　<a href="view/view_word.php">リアルタイム件数取得</a><br>
+<!--
+    日付：<input type="text" name="search_date" id="search_date" value="<?php echo $searchDate ?>" size="8" maxlength="8">
+    <input type="button" value="クリア" onclick="document.getElementById('search_date').value='';">
+    <input type="button" value="本日" onclick="document.getElementById('search_date').value='<?php echo $today ?>';">
+-->
+    サイト：<?php echo $selectSiteHtml ?>
+    カテゴリ：<?php echo $selectCateHtml ?>
+    拡張表示：<input type="checkbox" name="chk_display" id="chk_display" <?php echo $chkDisplay ?>>
+    拡張表示2：<input type="checkbox" name="chk_display2" id="chk_display2" <?php echo $chkDisplay2 ?>>
+    拡張表示3：<input type="checkbox" name="chk_display3" id="chk_display3" <?php echo $chkDisplay3 ?>><br>
+    キーワード：<?php echo $selectWordHtml ?><input type="text" name="search_word" id="search_word" value="<?php echo $searchFreeWord ?>">
+    <input type="button" value="クリア" onclick="document.getElementById('search_word').value='';document.getElementById('search_sel_word').value='';">
+    <input type="submit" value="絞り込み"><br>
+</form>
+<?php
+
+echo $htmlTable;
+?>
+</body>
+</html>

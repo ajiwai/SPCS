@@ -1,0 +1,13 @@
+<Files ~ "^\.(htaccess|htpasswd)$">
+deny from all
+</Files>
+
+<Files ~ "\.txt$">
+order deny,allow
+deny from all
+allow from localhost
+allow from 192.168.33.77
+</Files>
+
+Options -Indexes
+DirectoryIndex index.php

@@ -1,0 +1,5 @@
+<Files ~ "(^\.(htaccess|htpasswd)$|\.html$)">
+deny from all
+</Files>
+Options -Indexes
+order deny,allow
